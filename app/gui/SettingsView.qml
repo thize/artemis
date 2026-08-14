@@ -7,6 +7,7 @@ import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import SystemProperties 1.0
+import MicrophoneDevices 1.0
 import ClipboardManager 1.0
 import ServerCommandManager 1.0
 
@@ -1098,6 +1099,120 @@ Flickable {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Mutes Artemis's audio when you Alt+Tab out of the stream or click on a different window.")
+                }
+
+                CheckBox {
+                    id: micPassthroughCheck
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Enable microphone passthrough")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.enableMicPassthrough
+                    onCheckedChanged: {
+                        StreamingPreferences.enableMicPassthrough = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Sends your microphone to the host PC's virtual microphone, so apps and games running there can use it.")
+                }
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Microphone passthrough requires Apollo as the host streaming software.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                    color: "#888888"
+                }
+
+                Label {
+                    width: parent.width
+                    id: micDeviceTitle
+                    text: qsTr("Microphone to capture")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    visible: StreamingPreferences.enableMicPassthrough
+                }
+
+                AutoResizingComboBox {
+                    function createModel() {
+                        var model = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
+                        model.append({
+                                         text: qsTr("System default"),
+                                         val: ""
+                                     })
+
+                        var devices = MicrophoneDevices.captureDevices
+                        for (var i = 0; i < devices.length; i++) {
+                            model.append({
+                                             text: devices[i],
+                                             val: devices[i]
+                                         })
+                        }
+
+                        // Keep the saved device in the list even if it's not connected
+                        // right now, so the user's choice isn't silently discarded.
+                        var savedDevice = StreamingPreferences.micCaptureDevice
+                        if (savedDevice !== "" && devices.indexOf(savedDevice) === -1) {
+                            model.append({
+                                             text: qsTr("%1 (not connected)").arg(savedDevice),
+                                             val: savedDevice
+                                         })
+                        }
+
+                        return model
+                    }
+
+                    // This is used on initialization and upon retranslation
+                    function reinitialize() {
+                        if (!visible) {
+                            // Do nothing if the control won't even be visible
+                            return
+                        }
+
+                        // Pick up microphones that were connected since the last enumeration
+                        MicrophoneDevices.refresh()
+
+                        model = createModel()
+                        currentIndex = 0
+
+                        // Set the current value based on the saved preferences
+                        var savedDevice = StreamingPreferences.micCaptureDevice
+                        for (var i = 0; i < model.count; i++) {
+                            if (savedDevice === model.get(i).val) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+
+                    Component.onCompleted: {
+                        reinitialize()
+                        languageChanged.connect(reinitialize)
+                    }
+
+                    onVisibleChanged: {
+                        if (visible) {
+                            reinitialize()
+                        }
+                    }
+
+                    id: micDeviceComboBox
+                    visible: StreamingPreferences.enableMicPassthrough
+                    hoverEnabled: true
+                    textRole: "text"
+                    onActivated: {
+                        StreamingPreferences.micCaptureDevice = model.get(currentIndex).val
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("The system default microphone is used unless you pick a specific one here.")
                 }
             }
         }

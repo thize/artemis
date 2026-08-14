@@ -211,6 +211,7 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
+    backend/microphonedevices.cpp \
     backend/clipboardmanager.cpp \
     backend/servercommandmanager.cpp \
     backend/serverpermissions.cpp \
@@ -254,6 +255,7 @@ HEADERS += \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
     backend/systemproperties.h \
+    backend/microphonedevices.h \
     backend/clipboardmanager.h \
     backend/servercommandmanager.h \
     backend/serverpermissions.h \

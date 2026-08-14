@@ -59,6 +59,8 @@
 #define SER_CUSTOMREFRESHRATE "customrefreshrate"
 #define SER_RESOLUTIONSCALING "resolutionscaling"
 #define SER_RESOLUTIONSCALEFACTOR "resolutionscalefactor"
+#define SER_MICPASSTHROUGH "micpassthrough"
+#define SER_MICCAPTUREDEVICE "miccapturedevice"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -182,6 +184,8 @@ void StreamingPreferences::reload()
     customRefreshRate = settings.value(SER_CUSTOMREFRESHRATE, 59.94).toDouble();
     enableResolutionScaling = settings.value(SER_RESOLUTIONSCALING, false).toBool();
     resolutionScaleFactor = settings.value(SER_RESOLUTIONSCALEFACTOR, 100).toInt();
+    enableMicPassthrough = settings.value(SER_MICPASSTHROUGH, false).toBool();
+    micCaptureDevice = settings.value(SER_MICCAPTUREDEVICE, QString()).toString();
 
 
     // Perform default settings updates as required based on last default version
@@ -380,6 +384,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_CUSTOMREFRESHRATE, customRefreshRate);
     settings.setValue(SER_RESOLUTIONSCALING, enableResolutionScaling);
     settings.setValue(SER_RESOLUTIONSCALEFACTOR, resolutionScaleFactor);
+    settings.setValue(SER_MICPASSTHROUGH, enableMicPassthrough);
+    settings.setValue(SER_MICCAPTUREDEVICE, micCaptureDevice);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)

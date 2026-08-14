@@ -162,6 +162,8 @@ public:
     Q_PROPERTY(double customRefreshRate MEMBER customRefreshRate NOTIFY customRefreshRateChanged)
     Q_PROPERTY(bool enableResolutionScaling MEMBER enableResolutionScaling NOTIFY enableResolutionScalingChanged)
     Q_PROPERTY(int resolutionScaleFactor MEMBER resolutionScaleFactor NOTIFY resolutionScaleFactorChanged);
+    Q_PROPERTY(bool enableMicPassthrough MEMBER enableMicPassthrough NOTIFY enableMicPassthroughChanged)
+    Q_PROPERTY(QString micCaptureDevice MEMBER micCaptureDevice NOTIFY micCaptureDeviceChanged)
 
     Q_INVOKABLE bool retranslate();
 
@@ -212,6 +214,8 @@ public:
     double customRefreshRate;
     bool enableResolutionScaling;
     int resolutionScaleFactor;
+    bool enableMicPassthrough;
+    QString micCaptureDevice;
 
 signals:
     void displayModeChanged();
@@ -257,6 +261,8 @@ signals:
     void customRefreshRateChanged();
     void enableResolutionScalingChanged();
     void resolutionScaleFactorChanged();
+    void enableMicPassthroughChanged();
+    void micCaptureDeviceChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);

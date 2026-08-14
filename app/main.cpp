@@ -44,6 +44,7 @@
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
 #include "backend/systemproperties.h"
+#include "backend/microphonedevices.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
@@ -720,6 +721,11 @@ int main(int argc, char *argv[])
                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                    return new SystemProperties();
                                                });
+    qmlRegisterSingletonType<MicrophoneDevices>("MicrophoneDevices", 1, 0,
+                                                "MicrophoneDevices",
+                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                    return new MicrophoneDevices();
+                                                });
     qmlRegisterSingletonType<SdlGamepadKeyNavigation>("SdlGamepadKeyNavigation", 1, 0,
                                                       "SdlGamepadKeyNavigation",
                                                       [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
