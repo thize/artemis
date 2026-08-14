@@ -38,6 +38,8 @@
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Artemis uses the local network to connect to your gaming PC for streaming.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Artemis uses the microphone to send your voice to your gaming PC while streaming.</string>
 	<key>CFBundleVersion</key>
 	<string>0.5.6</string>
 	<key>CFBundleShortVersionString</key>
