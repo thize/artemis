@@ -117,6 +117,8 @@ public:
     quint32 serverPermissions;
     // Remember to update isEqualSerialized() when adding fields here!
     QString apolloVersion;
+    bool microphoneCapable;
+    bool microphoneDriverReady;
 
     // Synchronization
     mutable CopySafeReadWriteLock lock;

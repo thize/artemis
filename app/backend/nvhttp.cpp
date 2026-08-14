@@ -270,7 +270,12 @@ NvHTTP::startApp(QString verb,
         allParams += "&scaleFactor=" + QString::number(prefs->resolutionScaleFactor);
         qInfo() << "Requesting resolution scaling:" << prefs->resolutionScaleFactor << "%";
     }
-    
+
+    if (streamConfig->enableMicrophone) {
+        allParams += "&enableMic=1";
+        qInfo() << "Requesting microphone passthrough from Apollo server";
+    }
+
     // Add Limelight parameters
     allParams += LiGetLaunchUrlQueryParameters();
 

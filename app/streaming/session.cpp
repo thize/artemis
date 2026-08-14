@@ -784,6 +784,16 @@ bool Session::initialize()
                 "Audio channel mask: %X",
                 CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
+    // Microphone passthrough is an Apollo extension, so only offer it to hosts
+    // that advertised support for it in their serverinfo response.
+    m_StreamConfig.enableMicrophone = m_Preferences->enableMicPassthrough && m_Computer->microphoneCapable;
+    if (m_StreamConfig.enableMicrophone && !m_Computer->microphoneDriverReady) {
+        // The host withholds the microphone feature flag until its virtual
+        // microphone driver is usable, so we may end up not capturing at all.
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Host has no virtual microphone driver ready");
+    }
+
     // Start with all codecs and profiles in priority order
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_HIGH10_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_MAIN10);
@@ -2164,6 +2174,12 @@ void Session::execInternal()
     // Start rich presence to indicate we're in game
     RichPresenceManager presence(*m_Preferences, m_App.name);
 
+    // Start capturing the microphone if the host accepted our offer during the
+    // RTSP handshake. LiSendMicrophoneData() is unusable otherwise.
+    if (m_StreamConfig.enableMicrophone && (LiGetHostFeatureFlags() & LI_FF_MICROPHONE)) {
+        m_MicEncoder.start(m_Preferences->micCaptureDevice);
+    }
+
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
@@ -2529,6 +2545,11 @@ DispatchDeferredCleanup:
     // interfere with SDLGamepadKeyNavigation.
     delete m_InputHandler;
     m_InputHandler = nullptr;
+
+    // Stop capturing the microphone now. This must happen before we dispatch
+    // the deferred cleanup task, because that calls LiStopConnection() and the
+    // capture thread would otherwise still be calling LiSendMicrophoneData().
+    m_MicEncoder.stop();
 
     // Destroy the decoder, since this must be done on the main thread
     // NB: This must happen before LiStopConnection() for pull-based

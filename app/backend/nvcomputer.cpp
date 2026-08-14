@@ -22,6 +22,8 @@
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
 #define SER_NVIDIASOFTWARE "nvidiasw"
+#define SER_MICCAPABLE "miccapable"
+#define SER_MICDRIVERREADY "micdriverready"
 
 NvComputer::NvComputer(QSettings& settings)
 {
@@ -39,6 +41,8 @@ NvComputer::NvComputer(QSettings& settings)
                                     settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
     this->isNvidiaServerSoftware = settings.value(SER_NVIDIASOFTWARE).toBool();
+    this->microphoneCapable = settings.value(SER_MICCAPABLE).toBool();
+    this->microphoneDriverReady = settings.value(SER_MICDRIVERREADY).toBool();
 
     int appCount = settings.beginReadArray(SER_APPLIST);
     this->appList.reserve(appCount);
@@ -92,6 +96,8 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     settings.setValue(SER_MANUALPORT, manualAddress.port());
     settings.setValue(SER_SRVCERT, serverCert.toPem());
     settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
+    settings.setValue(SER_MICCAPABLE, microphoneCapable);
+    settings.setValue(SER_MICDRIVERREADY, microphoneDriverReady);
 
     // Avoid deleting an existing applist if we couldn't get one
     if (!appList.isEmpty() && serializeApps) {
@@ -118,6 +124,8 @@ bool NvComputer::isEqualSerialized(const NvComputer &that) const
            this->serverCert == that.serverCert &&
            this->isNvidiaServerSoftware == that.isNvidiaServerSoftware &&
            this->apolloVersion == that.apolloVersion &&
+           this->microphoneCapable == that.microphoneCapable &&
+           this->microphoneDriverReady == that.microphoneDriverReady &&
            this->serverCommands == that.serverCommands &&
            this->serverPermissions == that.serverPermissions &&
            this->appList == that.appList;
@@ -212,6 +220,15 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     if (!this->apolloVersion.isEmpty()) {
         qDebug() << "Apollo server detected, version:" << this->apolloVersion;
     }
+
+    // Check for microphone passthrough support (Apollo servers only). Hosts that
+    // don't advertise these leave microphone passthrough disabled.
+    this->microphoneCapable = NvHTTP::getXmlString(serverInfo, "MicrophoneCapable") == "1";
+    this->microphoneDriverReady = NvHTTP::getXmlString(serverInfo, "MicrophoneDriverReady") == "1";
+    if (this->microphoneCapable) {
+        qDebug() << "Apollo server supports microphone passthrough. Driver ready:" << this->microphoneDriverReady;
+    }
+
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
@@ -592,6 +609,8 @@ bool NvComputer::update(const NvComputer& that)
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);
     ASSIGN_IF_CHANGED(apolloVersion);
+    ASSIGN_IF_CHANGED(microphoneCapable);
+    ASSIGN_IF_CHANGED(microphoneDriverReady);
     ASSIGN_IF_CHANGED_AND_NONNULL(serverCert);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(displayModes);
     ASSIGN_IF_CHANGED(serverCommands);

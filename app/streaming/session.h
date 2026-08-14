@@ -8,6 +8,7 @@
 #include "settings/streamingpreferences.h"
 #include "input/input.h"
 #include "video/decoder.h"
+#include "audio/capture/micencoder.h"
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
 
@@ -309,6 +310,7 @@ private:
     OPUS_MULTISTREAM_CONFIGURATION m_OriginalAudioConfig;
     int m_AudioSampleCount;
     Uint32 m_DropAudioEndTime;
+    MicEncoder m_MicEncoder;
 
     Overlay::OverlayManager m_OverlayManager;
     QuickMenuManager* m_QuickMenuManager;
