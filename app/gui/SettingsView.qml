@@ -86,13 +86,17 @@ Flickable {
     StackView.onDeactivating: {
         SdlGamepadKeyNavigation.setUiNavMode(false)
 
+        // Never leave the microphone open once the user leaves this page
+        micTestButton.stopTest()
+
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()
     }
 
     Component.onDestruction: {
-        // Also save preferences on destruction, since we won't get a
-        // deactivating callback if the user just closes Moonlight
+        // Also stop monitoring and save preferences on destruction, since we
+        // won't get a deactivating callback if the user just closes Moonlight
+        MicrophoneDevices.stopMonitoring()
         StreamingPreferences.save()
     }
 
@@ -1207,12 +1211,90 @@ Flickable {
                     textRole: "text"
                     onActivated: {
                         StreamingPreferences.micCaptureDevice = model.get(currentIndex).val
+
+                        // Follow the newly picked device if a test is running
+                        if (micTestButton.testing) {
+                            MicrophoneDevices.startMonitoring(StreamingPreferences.micCaptureDevice)
+                        }
                     }
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("The system default microphone is used unless you pick a specific one here.")
+                }
+
+                Button {
+                    // The test is explicit rather than automatic, because
+                    // opening the capture device lights up the microphone
+                    // indicator of the OS and takes exclusive devices away
+                    // from other applications. That shouldn't happen just
+                    // because the settings page is on screen.
+                    property bool testing: false
+
+                    function stopTest() {
+                        MicrophoneDevices.stopMonitoring()
+                        testing = false
+                    }
+
+                    id: micTestButton
+                    visible: StreamingPreferences.enableMicPassthrough
+                    hoverEnabled: true
+                    text: testing ? qsTr("Stop test") : qsTr("Test microphone")
+                    font.pointSize: 12
+                    onClicked: {
+                        if (testing) {
+                            stopTest()
+                        }
+                        else {
+                            MicrophoneDevices.startMonitoring(StreamingPreferences.micCaptureDevice)
+                            testing = true
+                        }
+                    }
+
+                    // Turning microphone passthrough off hides this button, and
+                    // we must not leave the microphone open behind it.
+                    onVisibleChanged: {
+                        if (!visible) {
+                            stopTest()
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Listens to the selected microphone so you can check that Artemis can hear you.")
+                }
+
+                Rectangle {
+                    id: micLevelMeter
+                    width: parent.width
+                    height: 10
+                    radius: height / 2
+                    visible: micTestButton.testing
+                    color: "#40000000"
+                    border.width: 1
+                    border.color: "#888888"
+
+                    Rectangle {
+                        id: micLevelIndicator
+                        x: parent.border.width
+                        width: (parent.width - 2 * parent.border.width) * MicrophoneDevices.level
+                        height: parent.height - 2 * parent.border.width
+                        anchors.verticalCenter: parent.verticalCenter
+                        radius: height / 2
+                        color: "skyblue"
+                    }
+                }
+
+                Label {
+                    width: parent.width
+                    id: micLevelDesc
+                    text: qsTr("Speak into your microphone. The bar moves if Artemis is hearing you.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                    visible: micTestButton.testing
+                    color: "#888888"
                 }
             }
         }
