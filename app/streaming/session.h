@@ -144,6 +144,11 @@ public:
         return m_OverlayManager;
     }
 
+    const MicEncoder& getMicEncoder() const
+    {
+        return m_MicEncoder;
+    }
+
     void flushWindowEvents();
 
     void setShouldExitAfterQuit();

@@ -47,7 +47,10 @@ private:
         bool enabled;
         int fontSize;
         SDL_Color color;
-        char text[512];
+
+        // The debug overlay nearly fills 512 bytes with video statistics alone,
+        // so there must be room left over for the microphone statistics.
+        char text[1024];
 
         TTF_Font* font;
         SDL_Surface* surface;

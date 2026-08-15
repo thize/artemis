@@ -985,6 +985,74 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     }
 }
 
+// Converts a linear audio level into dBFS for display. Silence is reported as
+// -60 dBFS, which is the same floor used by the microphone level meter in the
+// settings UI.
+static float micLevelToDbFs(float level)
+{
+    return 20 * SDL_log10f(SDL_max(level, 0.001f));
+}
+
+// Appends the microphone section to the performance overlay text. Nothing is
+// appended unless we're actually capturing, since most users don't stream
+// their microphone at all.
+void FFmpegVideoDecoder::appendMicStats(char* output, int length)
+{
+    MIC_STATS stats;
+    int offset = (int)SDL_strlen(output);
+    int ret;
+
+    Session::get()->getMicEncoder().getStats(stats);
+
+    if (!stats.active) {
+        return;
+    }
+
+    ret = snprintf(&output[offset],
+                   length - offset,
+                   "Microphone device: %s\n"
+                   "Microphone frames captured/sent: %.2f/%.2f FPS (%.1f Kbps)\n"
+                   "Microphone input level RMS/peak: %.1f/%.1f dBFS\n",
+                   stats.deviceName,
+                   stats.capturedFps,
+                   stats.sentFps,
+                   stats.bitrateKbps,
+                   micLevelToDbFs(stats.rmsLevel),
+                   micLevelToDbFs(stats.peakLevel));
+    if (ret < 0 || ret >= length - offset) {
+        SDL_assert(false);
+        return;
+    }
+
+    offset += ret;
+
+    if (stats.encodeErrors != 0 || stats.sendErrors != 0) {
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "Microphone frames dropped (encoding/sending): %u/%u\n",
+                       stats.encodeErrors,
+                       stats.sendErrors);
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
+    }
+
+    if (stats.sendingStopped) {
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "Microphone streaming stopped due to an unrecoverable error\n");
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
+    }
+}
+
 void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
 {
     if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
@@ -1923,6 +1991,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             stringifyVideoStats(lastTwoWndStats,
                                 Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
                                 Session::get()->getOverlayManager().getOverlayMaxTextLength());
+            appendMicStats(Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
+                           Session::get()->getOverlayManager().getOverlayMaxTextLength());
             Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebug);
         }
 
