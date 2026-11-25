@@ -6,6 +6,10 @@
 
 #include "settings/mappingmanager.h"
 
+#ifdef Q_OS_DARWIN
+#include "streaming/input/macgamecontroller.h"
+#endif
+
 #define AXIS_NAVIGATION_REPEAT_DELAY 150
 
 SdlGamepadKeyNavigation::SdlGamepadKeyNavigation(StreamingPreferences* prefs)
@@ -37,6 +41,9 @@ void SdlGamepadKeyNavigation::enable()
     // arrival events. Additionally, there's a race condition between
     // our QML objects being destroyed and SDL being deinitialized that
     // this solves too.
+#ifdef Q_OS_DARWIN
+    MacGameController::configureSdlJoystickDrivers();
+#endif
     if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",

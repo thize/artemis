@@ -48,6 +48,9 @@
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
+#ifdef Q_OS_DARWIN
+#include "streaming/input/macgamecontroller.h"
+#endif
 #include "backend/clipboardmanager.h"
 #include "backend/servercommandmanager.h"
 #include "backend/quickmenumanager.h"
@@ -590,6 +593,12 @@ int main(int argc, char *argv[])
 #endif
 
     QGuiApplication app(argc, argv);
+
+#ifdef Q_OS_DARWIN
+    // Give the GameController framework time to discover controllers before we
+    // decide which SDL joystick drivers to use for them.
+    MacGameController::startDiscovery();
+#endif
 
 #ifndef STEAM_LINK
     // Force use of the KMSDRM backend for SDL when using Qt platform plugins

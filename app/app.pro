@@ -167,6 +167,9 @@ macx {
 
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
 
+    # For gamepad driver selection
+    LIBS += -framework GameController -framework IOKit
+
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit
 
@@ -431,6 +434,10 @@ macx {
 
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h
+}
+macx {
+    SOURCES += streaming/input/macgamecontroller.mm
+    HEADERS += streaming/input/macgamecontroller.h
 }
 soundio {
     message(libsoundio audio renderer selected)

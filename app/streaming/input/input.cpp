@@ -9,6 +9,10 @@
 #include <QDir>
 #include <QGuiApplication>
 
+#ifdef Q_OS_DARWIN
+#include "macgamecontroller.h"
+#endif
+
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
@@ -160,6 +164,9 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // can allow mapping manager to update the mappings before GC attach
     // events are generated.
     SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
+#ifdef Q_OS_DARWIN
+    MacGameController::configureSdlJoystickDrivers();
+#endif
     if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_JOYSTICK) failed: %s",
